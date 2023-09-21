@@ -8,9 +8,11 @@ use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
-class UserController extends Controller {
+class UserController extends Controller
+{
 
-    public function index() {
+    public function index()
+    {
 
         return $this->successResponse(
             UserResource::collection(User::all())
@@ -18,18 +20,28 @@ class UserController extends Controller {
 
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
+
+        $firstName = $request->input('first_name');
+        $lastName = $request->input('last_name');
+        $email = $request->input('email');
+
+        if (is_null($firstName) ||is_null($lastName) || is_null($email)) {
+            return $this->errorResponse('First Name, Last Name and Email are required', \Illuminate\Http\Response::HTTP_BAD_REQUEST);
+        }
 
         $user = User::create(
             [
                 'first_name' => $request->input('first_name'),
-                'last_name'  => $request->input('last_name'),
-                'email'      => $request->input('email')
+                'last_name' => $request->input('last_name'),
+                'email' => $request->input('email')
             ]
+
         );
         Wallet::create(
             [
-                'balance' => 100,
+                'balance' => 0,
                 'user_id' => $user->id
             ]
         );
@@ -40,7 +52,8 @@ class UserController extends Controller {
         );
     }
 
-    public function show(User $user) {
+    public function show(User $user)
+    {
 
         return $this->successResponse(
             new UserResource($user)
@@ -48,7 +61,8 @@ class UserController extends Controller {
 
     }
 
-    public function update(Request $request, User $user) {
+    public function update(Request $request, User $user)
+    {
 
         $user->update(
             $request->only(
@@ -65,7 +79,8 @@ class UserController extends Controller {
         );
     }
 
-    public function investments(User $user) {
+    public function investments(User $user)
+    {
 
         $userInvestments = $user->investments;
 
@@ -74,7 +89,8 @@ class UserController extends Controller {
         );
     }
 
-    public function destroy(User $user) {
+    public function destroy(User $user)
+    {
 
         $user->delete();
 

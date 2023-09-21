@@ -58,7 +58,7 @@ class UserControllerTests extends TestCase
                         'id',
                         'first_name',
                         'last_name',
-                        'email' .
+                        'email',
                         'created_at',
                         'wallet' => [
                             'id', 'balance'
@@ -69,7 +69,7 @@ class UserControllerTests extends TestCase
         $this->assertDatabaseHas('users', $payload);
     }
 
-    public function userIsShownCorrectly()
+    public function testUserIsShownCorrectly()
     {
         //every user has their own wallet
         $user = User::create(
@@ -80,9 +80,9 @@ class UserControllerTests extends TestCase
             ]
         );
 
-        $wallet = Wallet::create([
-            'user_id' => $user->id,
+        Wallet::create([
             'balance' => 0,
+            'user_id' => $user->id,
         ]);
 
         $this->json('get', "api/user/$user->id")
@@ -93,7 +93,7 @@ class UserControllerTests extends TestCase
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
-                    'created_at' => (string)$user->create_at,
+                    'created_at' => (string)$user->created_at,
                     'wallet' => [
                         'id' => $user->wallet->id,
                         'balance' => $user->wallet->balance
@@ -150,14 +150,14 @@ class UserControllerTests extends TestCase
         ];
 
 
-        $this->json('put', "api/update/$user->id", $payload)
+        $this->json('put', "api/user/$user->id", $payload)
             ->assertStatus(Response::HTTP_OK)
             ->assertExactJson([
                 'data' => [
                     'id' => $user->id,
-                    'first_name' => $payload->firstName,
-                    'last_name' => $payload->lastName,
-                    'email' => $payload->email,
+                    'first_name' => $payload['first_name'],
+                    'last_name' => $payload['last_name'],
+                    'email' => $payload['email'],
                     'created_at' => (string)$user->created_at,
                     'wallet' => [
                         'id' => $user->wallet->id,
@@ -201,21 +201,79 @@ class UserControllerTests extends TestCase
                 'returns' => $investmentReturns
             ]
         );
-        $this->json('get', "api/$user->id/investments")
+        $this->json('get', "api/user/$user->id/investments")
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(
                 [
                     'data' => [
-                        'id' => $investment->id,
-                        'user_id' => $investment->user->id,
-                        'strategy' => $investment->strategy->id,
-                        'successful' => (bool)$investment->successful,
-                        'amount' => $investment->amount,
-                        'returns' => $investment->returns,
-                        'created_at' => (string)$investment->created_at,
+                        [
+                            'id' => $investment->id,
+                            'user_id' => $investment->user->id,
+                            'strategy_id' => $investment->strategy->id,
+                            'successful' => (bool)$investment->successful,
+                            'amount' => $investment->amount,
+                            'returns' => $investment->returns,
+                            'created_at' => (string)$investment->created_at,
+                        ]
                     ]
                 ]
             );
+    }
+
+    public function testShowForMissingUser()
+    {
+        $this->json('get', "api/user/0")
+            ->assertStatus(Response::HTTP_NOT_FOUND)
+            ->assertJsonStructure(['error']);
+    }
+
+    public function testUpdateForMissingUser()
+    {
+        $payload = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->email,
+        ];
+
+        $this->json('put', 'api/user/0', $payload)
+            ->assertStatus(Response::HTTP_NOT_FOUND)
+            ->assertJsonStructure(['error']);
+    }
+
+    public function testDestroyForMissingUser()
+    {
+        $this->json('delete', 'api/user/0')
+            ->assertStatus(Response::HTTP_NOT_FOUND)
+            ->assertJsonStructure(['error']);
+    }
+
+    public function testStoreWithMissingData()
+    {
+        $payload = [
+            'first_name' => $this->faker->firstName,
+        ];
+
+        $this->json('post', 'api/user', $payload)
+            ->assertStatus(Response::HTTP_BAD_REQUEST)
+            ->assertJsonStructure(['error']);
+    }
+
+    public function testStoredUserHasEmptyWallet()
+    {
+        $payload = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->email,
+        ];
+
+        $apiResponse = $this->json('post', 'api/user', $payload)
+            ->getContent();
+
+        $userData = json_decode($apiResponse, true)['data'];
+        $walletDetails = $userData['wallet'];
+
+        $this->assertEquals(0, $walletDetails['balance']);
+
     }
 
 }
