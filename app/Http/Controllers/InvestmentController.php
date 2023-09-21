@@ -8,7 +8,7 @@ use App\Models\Strategy;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class InvestmentController extends Controller {
+class  InvestmentController extends Controller {
 
     public function index() {
 
