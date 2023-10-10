@@ -40,7 +40,7 @@ class UserControllerTests extends TestCase
     public function testUserIsCreatedSuccessfully()
     {
         //below format is applicable for post requests
-        //create the data first to be used in testing
+        //create the data (payload) first to be used in testing
         //run the api call
         //check db
 
@@ -71,6 +71,10 @@ class UserControllerTests extends TestCase
 
     public function testUserIsShownCorrectly()
     {
+        //for show requests follow this format:
+        //1. create random appropriate data in db
+        //2. invoke a get request on the endpoint
+        //assert the status code and exactJsonStructure
         //every user has their own wallet
         $user = User::create(
             [
