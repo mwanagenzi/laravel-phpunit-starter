@@ -42,7 +42,7 @@ class  InvestmentController extends Controller
         }
 
         $successful = (bool)random_int(0, 1);
-        $requestArray['successful'] = $successful;
+//        $requestArray['successful'] = $successful;
 
         $user = User::findOrFail($userId);
         $strategy = Strategy::findOrFail($strategyId);
@@ -57,7 +57,7 @@ class  InvestmentController extends Controller
         $multiplier = $successful ?
             $strategy->yield :
             $strategy->relief;
-//        $requestArray['returns'] = $requestArray['amount'] * $multiplier;
+
         $investment['returns'] = $amount * $multiplier;
         $investment = Investment::create($investment);
 
