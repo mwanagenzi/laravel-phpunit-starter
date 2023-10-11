@@ -6,6 +6,7 @@ use App\Http\Controllers\InvestmentController;
 use App\Models\Investment;
 use App\Models\Strategy;
 use App\Models\User;
+use Carbon\Carbon;
 use Psy\Util\Str;
 use Tests\TestCase;
 use \Illuminate\Http\Response;
@@ -50,14 +51,14 @@ class InvestmentsControllerTests extends TestCase
             Strategy::factory()->create()->getAttributes()
         );
 
-        $amount = $this->faker->randomNumber(4);
-
         $payload = [
             'user_id' => $user->id,
             'strategy_id' => $strategy->id,
             'successful' => $this->faker->boolean,
-            'amount' => $amount,
+            'amount' => $this->faker->randomNumber(4),
         ];
+
+        $investment = Investment::create($payload)->getAttributes();
 
         $this->json('post', 'api/investment', $payload)
             ->assertStatus(Response::HTTP_CREATED)
@@ -74,7 +75,7 @@ class InvestmentsControllerTests extends TestCase
                     ]
                 ]
             );
-        $this->assertDatabaseHas('investments', $payload);
+        $this->assertDatabaseHas('investments', $investment);
     }
 
     public function testInvestmentStoredWithMissingData()
