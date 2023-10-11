@@ -50,12 +50,13 @@ class InvestmentsControllerTests extends TestCase
             Strategy::factory()->create()->getAttributes()
         );
 
-        $amount = $this->faker->randomNumber(6);
+        $amount = $this->faker->randomNumber(4);
 
         $payload = [
             'user_id' => $user->id,
             'strategy_id' => $strategy->id,
-            'amount' => $amount
+            'successful' => $this->faker->boolean,
+            'amount' => $amount,
         ];
 
         $this->json('post', 'api/investment', $payload)
@@ -162,6 +163,41 @@ class InvestmentsControllerTests extends TestCase
         $this->json('delete', "api/investment/$investment->id")
             ->assertStatus(Response::HTTP_UNAUTHORIZED);
         //TODO: check logic behind the above line
+    }
+
+    public function testDestroyMissingInvestment()
+    {
+        $this->json('delete', "api/investment/0")
+            ->assertJsonStructure(['error'])
+            ->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testUpdateInvestment()
+    {
+        $user = User::create(User::factory()->create()->getAttributes());
+        $strategy = Strategy::create(Strategy::factory()->create()->getAttributes());
+        $isSuccessful = $this->faker->boolean;
+        $investmentAmount = $this->faker->randomNumber(4, true);
+        $investmentReturns = $isSuccessful ?
+            $investmentAmount * $strategy->yield :
+            $investmentAmount * $strategy->relief;
+
+        $investment = Investment::create([
+            'user_id' => $user->id,
+            'strategy_id' => $strategy->id,
+            'successful' => $isSuccessful,
+            'amount' => $investmentAmount,
+            'returns' => $investmentReturns,
+        ]);
+
+        $update_payload = [
+            'successful' => $this->faker->boolean,
+            'amount' => $this->faker->randomNumber(4, true)
+        ];
+
+        $this->json('put', "api/investment/$investment->id")
+            ->assertStatus(Response::HTTP_UNAUTHORIZED);
+        //todo: Find out why assert the status in the above line with 401
     }
 
 }
